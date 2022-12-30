@@ -4,7 +4,8 @@ let joi=require("joi")
 let modle=require("./trufModel")
 let userData=require("../middleware/Auth")
 const Orders = require("../schema/booking")
-const { func } = require("joi")
+const { func, when } = require("joi")
+const { where } = require("sequelize")
 
 
 async function checkbookingturf(param){
@@ -133,7 +134,7 @@ async function confirmbooking(param,userData){
     if(!find || find.error){
         return {error:"id not found"}
     }
-    let updat=await Orders.update({conform_by:userData.id},{where:{id:find.id}}).catch((error)=>{
+    let updat=await Orders.update({conform_by:userData.id,status:1},{where:{id:find.id}}).catch((error)=>{
         return {error:error}
     })
 
@@ -157,7 +158,7 @@ async function cancelbooking(param,userData){
         return {error:"id not found"}
     }
    
-    let updat=await Orders.update({cancel_by:userData.id},{where:{id:param.id}}).catch((error)=>{
+    let updat=await Orders.update({cancel_by:userData.id,status:2},{where:{id:param.id}}).catch((error)=>{
         return {error:error}
     })
     if(!updat || updat.error){
@@ -166,28 +167,63 @@ async function cancelbooking(param,userData){
     return {data:"booking canceled"}
 }
 
-// async function checkviewbooking(param){
-//     let schema=joi.object({
-//         id:joi.number().required()
-//     }).options({
-//         abortEarly:true
-//     })
-//     let check=schema.validate(param)
-//     if(check.error){
-//         let error=[]
-//         for(let err of check.error.details){
-//             error.push(err.message)
-//         }
-//         return {error:error}
-//     }
-//     return {data:check.value}
-// }
-
 async function viewbooking(userData){
-    let find=await Orders.findAll({attributes:["turf_id "," date","slot","payment_status","	conform_by","cancel_by","	status"] ,where:{user_id:userData.id}}).catch((error)=>{
+    let find=await Orders.findAll({attributes:["turf_id","date","slot","payment_status","conform_by","cancel_by","status"] ,where:{user_id:userData.id}}).catch((error)=>{
         return {error:error}
     })
-    console.log("check",check)
+    for(let f of find){
+        f.payment_status=(f.payment_status == 0)?"pending":f.payment_status=(f.payment_status == 1)?"payment Done":f.payment_status=(f.payment_status == 2)?"payment faile":"not avilable"
+        f.status=(f.status == 0)?"pending":f.status=(f.status == 1)?"booking confirm":f.status=(f.status == 2)?"bookong cancel":"not avilable"
+    }
+    if(!find || find.error){
+        return {error:"internal server error"}
+    }
+    return {data:find}
+}
+
+async function checkviewallbooking(param){
+    let schema=joi.object({
+        id:joi.number(),
+        user_id:joi.number(),
+        turf_id:joi.number()
+    }).options({
+        abortEarly:true
+    })
+    let check=schema.validate(param)
+    if(check.error){
+        let error=[]
+        for(let err of check.error.details){
+            error.push(err.message)
+        }
+        return {error:error}
+    }
+    return {data:check.value}
+}
+
+async function viewallbooking(param,userData){
+    let check=await checkviewallbooking(param).catch((error)=>{
+        return {error:error}
+    })
+    if(!check || check.error){
+        return {error:check.error}
+    }
+    let result={}
+    if(param.id){
+        result = {where:{id:param.id}}
+    }
+    if(param.user_id){
+        result = {where:{user_id:param.user_id}}
+    }
+    if(param.turf_id){
+        result = {where:{turf_id:param.turf_id}}
+    }
+    let find=await Orders.findAll(result,{raw:true}).catch((error)=>{
+        return {error:error}
+    })
+    for(let f of find){
+        f.payment_status=(f.payment_status == 0)?"pending":f.payment_status=(f.payment_status == 1)?"payment Done":f.payment_status=(f.payment_status == 2)?"payment faile":"not avilable"
+        f.status=(f.status == 0)?"pending":f.status=(f.status == 1)?"booking confirm":f.status=(f.status == 2)?"bookong cancel":"not avilable"
+    }
     if(!find || find.error){
         return {error:"internal server error"}
     }
@@ -198,5 +234,6 @@ module.exports={
     paymet,
     confirmbooking,
     cancelbooking,
-    viewbooking
+    viewbooking,
+    viewallbooking
 }

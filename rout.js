@@ -39,7 +39,7 @@ app.post("/payment",authantication.auth("user"),booking.paymant1)
 app.post("/confirmbooking",authantication.auth("conform_bookoing"),booking.confirmbooking1)
 app.post("/cancelbooking",authantication.auth("user"),booking.cancelbooking1)
 app.get("/viewbooking",authantication.auth("user"),booking.viewbooking1)
-
+app.get("/viewallbooking",authantication.auth("view_booking"),booking.viewallbooking1)
 
 
 app.use(errorhendal)

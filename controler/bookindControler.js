@@ -53,10 +53,21 @@ async function viewbooking1(request,response){
     }
     return response.send({data:check})
 }
+
+async function viewallbooking1(request,response){
+    let check=await booking.viewallbooking(request.body,request.userData).catch((error)=>{
+        return {error:error}
+    })
+    if(!check || check.error){
+        return response.send({error:check.error})
+    }
+    return response.send({data:check})
+}
 module.exports={
     bookingturf1,
     paymant1,
     confirmbooking1,
     cancelbooking1,
-    viewbooking1
+    viewbooking1,
+    viewallbooking1
 }
