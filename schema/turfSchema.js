@@ -37,6 +37,10 @@ Turf.init({
         type:DataTypes.STRING,
         allowNull:false
     },
+    advance_amount:{
+        type:DataTypes.INTEGER,
+        allowNull:false
+    },
     createdBY:{
         type:DataTypes.INTEGER,
         allowNull:false

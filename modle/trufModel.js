@@ -1,9 +1,11 @@
 let {Turf}=require("../schema/turfSchema")
 let user=require("../schema/userSchema")
 let joi=require("joi")
+let ordre=require("../schema/booking")
 let userData=require("../middleware/Auth")
 let uploads=require("../helpper/multer")
 const { string, func, when } = require("joi")
+const Orders = require("../schema/booking")
 
 
 async function checkaddtruf(param){
@@ -14,7 +16,8 @@ async function checkaddtruf(param){
         price:joi.number().required(),
         facilties:joi.string().max(100).min(1).required(),
         rules:joi.string().max(100).min(1).required(),
-        size:joi.array().items(joi.string().max(100).min(1)).required()
+        size:joi.array().items(joi.string().max(100).min(1)).required(),
+        advance_amount:joi.number().required()
         }).options({abortEarly:false})
         let check=schema.validate(param)
         if(check.error){
@@ -201,11 +204,64 @@ async function viewAllturf(param){
     return {data:find}
 }
 
+async function checkviewslot(param){
+    let schema=joi.object({
+        turf_id:joi.number().required(),
+        date:joi.date().min('now').required()
+    }).options({abortEarly:false})
+    
+    let check=schema.validate(param)
+    if(check.error){
+        let error=[]
+        for(let err of check.error.details){
+            error.push(err.message)
+        }
+        return {error:error}
+    }
+    return{data:check.value}
+}
 
+async function viewslot(param,userData){
+    
+    let check=await checkviewslot(param).catch((error)=>{
+        return {error:error}
+    })
+    
+    if(!check || check.error){
+        return {error:check.error}
+    }
+    let availabel_slot= []
+    let slot=["1pm-2pm","2pm-3pm","3pm-4pm","4pm-5pm","5pm-6pm","6pm-7pm","7pm-8pm","8pm-9pm","9pm-10pm","10pm-11pm","11pm-12pm","1am-2am","2am-3am","3am-4am","4am-5am","5am-6am","6am-7am","7am-8am","8am-9am","9am-10am","10am-11am","11am-12am"]
+    
+    let bookedslot=await Orders.findAll({where:{turf_id:param.turf_id,date:param.date},raw:true}).catch((error)=>{
+        return {error:error}
+    })
+ 
+    if(!bookedslot || (bookedslot && bookedslot.length<=0) || bookedslot.error){
+       
+        return {data:slot};
+    }
+
+    let tempSlot = {};
+    for(let j of bookedslot)
+    {
+        tempSlot[j.slot] = true;
+    }
+   
+    for(let i of slot){
+       if(!tempSlot[i]){
+            availabel_slot.push(i);
+       }
+    }
+   
+
+    return{data:availabel_slot}
+}
 module.exports={
     addtruf,
     updatetruf,
     delettruf,
     undelettruf,
-    viewAllturf
+    viewAllturf,
+    viewslot
 }

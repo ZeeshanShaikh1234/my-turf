@@ -397,6 +397,47 @@ async function undeleteuser(param,userData){
     }
     return {data:"user undelete succses"}
 }
+
+async function checkupdateprofile(param){
+      let schema = joi.object({
+        name: joi.string(),
+        email: joi.string(),
+        password: joi.string()
+    }).options({
+        abortEarly: false
+    });
+    let check = schema.validate(param)
+    if (check.error) {
+        let error = []
+        for (let err of check.error.details) {
+            error.push(err.message)
+        }
+        return { error: error }
+    }
+    return { data: check.value }
+}
+
+async function updateprofile(param,userData){
+    let check=await checkupdateprofile(param).catch((error)=>{
+        return {error:error}
+    })
+    if(!check || check.error){
+        return {error:check.error}
+    }
+    let find =await User.findOne({where:{id:userData.id}}).catch((error)=>{
+        return {error:error}
+    })
+    if(!check || check.error){
+        return {error:"error"}
+    }
+    let update=await User.update(param,{where:{id:find.id}}).catch((error)=>{
+        return {error:error}
+    })
+    if(!update || update.error){
+        return {error:"internal serever error"}
+    }
+    return {data:"profile updat succses"}
+}
 module.exports = {
     register,
     loginUser,
@@ -405,5 +446,6 @@ module.exports = {
     newPassword,
     viweUSER,
     deleteuser,
-    undeleteuser
+    undeleteuser,
+    updateprofile
 }

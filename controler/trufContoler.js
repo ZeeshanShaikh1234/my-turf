@@ -52,10 +52,22 @@ async function viewAllturf1(request,response){
     }
     return response.send({data:check})
 }
+
+async function viewslot1(request,response){
+    let check=await truf.viewslot(request.body,request.userData).catch((error)=>{
+        return {error:error}
+    })
+    console.log(check)
+    if(!check || check.error){
+        return response.send({error:check.error})
+    }
+    return response.send({data:check})
+}
 module.exports={
     addtruf1,
     updateturf1,
     delettruf1,
     undelettruf1,
-    viewAllturf1
+    viewAllturf1,
+    viewslot1
 }

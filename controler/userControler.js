@@ -89,6 +89,15 @@ async function undeleteuser1(request,response){
     return response.send({data:check})
 }
 
+async function updateprofile1(request,response){
+    let check=await user.updateprofile(request.body,request.userData).catch((error)=>{
+        return{error:error}
+    })
+    if(!check || check.error){
+        return response.send({error:check.error})
+    }
+    return response.send({data:check})
+}
 module.exports={
     register,
     login,
@@ -97,5 +106,6 @@ module.exports={
     changePass,
     viweUsers,
     deleteuser1,
-    undeleteuser1
+    undeleteuser1,
+    updateprofile1
 }
